@@ -12,7 +12,6 @@ module.exports = {
   },
   Register: async (data) => {
     let { password, key } = data;
-    if (key === process.env.REACT_APP_KEY) {
       let cred = decode(data.cred);
       cred = {
         username: cred.email,
@@ -26,9 +25,6 @@ module.exports = {
         .insertOne(cred)
         .then((res) => (cred._id = res.insertedId));
       return cred;
-    } else {
-      return false;
-    }
   },
   loginGoogle: async (username) => {
     let user = await db.get().collection("users").findOne({ username });
@@ -114,29 +110,28 @@ module.exports = {
     return _id;
   },
   updatePost: (data, _id, userid) => {
-    console.log(data, _id, userid)
+    console.log(data, _id, userid);
     const update = {
       $set: {},
     };
-     Object.entries(data).forEach(([key, value]) => {
+    Object.entries(data).forEach(([key, value]) => {
       update.$set[`posts.$.${key}`] = value;
     });
-     db
-      .get()
+    db.get()
       .collection("posts")
       .updateOne({ _id: ObjectId(userid), "posts._id": ObjectId(_id) }, update);
   },
   getPosts: async (userId) => {
-    let posts = []
+    let posts = [];
     let result = await db
       .get()
       .collection("posts")
       .findOne({ _id: ObjectId(userId) });
 
-let a = result.posts.length
-   for(let i=0;i<a;i++) {
-    console.log(i)
-    posts.push(result.posts.pop())
+    let a = result.posts.length;
+    for (let i = 0; i < a; i++) {
+      console.log(i);
+      posts.push(result.posts.pop());
     }
     console.log(result?.posts.length);
 
@@ -279,43 +274,47 @@ let a = result.posts.length
           },
         ])
         .toArray();
-      const shuffledPosts = await db
-        .get()
-        .collection("posts")
-        .aggregate([
-          { $match: { _id: { $ne: ObjectId(id) } } },
-          { $unwind: "$posts" },
-          {
-            $match: {
-              "posts.approvedTo": { $exists: 0 },
-              "posts.requests._id": { $ne: id },
+      if (totalPosts) {
+        const shuffledPosts = await db
+          .get()
+          .collection("posts")
+          .aggregate([
+            { $match: { _id: { $ne: ObjectId(id) } } },
+            { $unwind: "$posts" },
+            {
+              $match: {
+                "posts.approvedTo": { $exists: 0 },
+                "posts.requests._id": { $ne: id },
+              },
             },
-          },
-          { $sample: { size: totalPosts[0].totalPosts } }, // Shuffle the order of the posts
-          { $skip: skip },
-          { $limit: limit },
-          {
-            $group: {
-              _id: 0,
-              combinedArray: {
-                $push: {
-                  _id: "$posts._id",
-                  head: "$posts.head",
-                  description: "$posts.description",
-                  links: "$posts.links",
-                  pic: "$posts.pic",
-                  type: "$posts.type",
-                  price: "$posts.price",
-                  userId: "$_id",
-                  requests: "$posts.requests",
+            { $sample: { size: totalPosts[0].totalPosts } }, // Shuffle the order of the posts
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $group: {
+                _id: 0,
+                combinedArray: {
+                  $push: {
+                    _id: "$posts._id",
+                    head: "$posts.head",
+                    description: "$posts.description",
+                    links: "$posts.links",
+                    pic: "$posts.pic",
+                    type: "$posts.type",
+                    price: "$posts.price",
+                    userId: "$_id",
+                    requests: "$posts.requests",
+                  },
                 },
               },
             },
-          },
-        ])
-        .toArray();
+          ])
+          .toArray();
+          return shuffledPosts[0].combinedArray;
+      }else{
+        return;
+      }
 
-      return shuffledPosts[0].combinedArray;
     } catch (e) {
       console.log(e);
       return [];
@@ -392,15 +391,15 @@ let a = result.posts.length
     //     $or: [{ user1: ObjectId(id) }, { user2: ObjectId(id) }],
     //   });
     // if (!a) {
-      console.log(userId,id,"new");
-      await db
-        .get()
-        .collection("Connection")
-        .insertOne({
-          user1: ObjectId(userId),
-          user2: ObjectId(id),
-          ConnectionPosts: { $push: ObjectId(postId) },
-        });
+    console.log(userId, id, "new");
+    await db
+      .get()
+      .collection("Connection")
+      .insertOne({
+        user1: ObjectId(userId),
+        user2: ObjectId(id),
+        ConnectionPosts: { $push: ObjectId(postId) },
+      });
     // } else {
     //   console.log(userId,id,"old");
 
@@ -822,7 +821,7 @@ let a = result.posts.length
         );
     }
   },
-  chart:async()=>{
+  chart: async () => {
     const types = [
       "Web Development",
       "UI/UX Design",
@@ -853,17 +852,21 @@ let a = result.posts.length
       "Product Design",
       "Network Security",
       "Illustration",
-      "Email Marketing"
+      "Email Marketing",
     ];
-    let value = [["Task", "Hours per Day"],]
-    for(let i in types){
-      let data = await db.get().collection("posts").aggregate([
-        {$unwind:"$posts"},
-        {$match:{"posts.type":types[i]}},
-      ]).toArray()
-      value.push([types[i],data.length])
+    let value = [["Task", "Hours per Day"]];
+    for (let i in types) {
+      let data = await db
+        .get()
+        .collection("posts")
+        .aggregate([
+          { $unwind: "$posts" },
+          { $match: { "posts.type": types[i] } },
+        ])
+        .toArray();
+      value.push([types[i], data.length]);
     }
     console.log(value);
-    return value
-  }
+    return value;
+  },
 };

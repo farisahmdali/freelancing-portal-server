@@ -4,7 +4,7 @@ const state = {
 }
 
 module.exports.connect = function (done) {
-    const url = "mongodb://0.0.0.0:27017"
+    const url = "mongodb+srv://farisahmdali:F0cQp78nOautmBUH@cluster0.0cu3o3a.mongodb.net/?retryWrites=true&w=majority"
     const dbname = 'freelancing-portal'
 
 
