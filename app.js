@@ -1,6 +1,6 @@
 let createError = require("http-errors");
 const fs = require("fs");
-const https = require("https");
+const http = require("http");
 let express = require("express");
 let session = require("express-session");
 let path = require("path");
@@ -11,11 +11,8 @@ let cors = require("cors");
 require("dotenv").config();
 const bodyparser = require("body-parser");
 let app = express();
-const privateKey = fs.readFileSync('../localhost+2-key.pem', 'utf8');
-const certificate = fs.readFileSync('../localhost+2.pem', 'utf8');
-const credentials = { key: privateKey, cert: certificate };
 
-const server = https.createServer(credentials,app);
+const server = http.createServer(app);
 
 const io = require("socket.io")(server, {
   cors: {

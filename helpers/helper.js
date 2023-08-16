@@ -12,19 +12,19 @@ module.exports = {
   },
   Register: async (data) => {
     let { password, key } = data;
-      let cred = decode(data.cred);
-      cred = {
-        username: cred.email,
-        pic: cred.picture,
-        name: cred.name,
-        password: "",
-      };
-      cred.password = await bcrypt.hash(password, 2);
-      db.get()
-        .collection("users")
-        .insertOne(cred)
-        .then((res) => (cred._id = res.insertedId));
-      return cred;
+    let cred = decode(data.cred);
+    cred = {
+      username: cred.email,
+      pic: cred.picture,
+      name: cred.name,
+      password: "",
+    };
+    cred.password = await bcrypt.hash(password, 2);
+    db.get()
+      .collection("users")
+      .insertOne(cred)
+      .then((res) => (cred._id = res.insertedId));
+    return cred;
   },
   loginGoogle: async (username) => {
     let user = await db.get().collection("users").findOne({ username });
@@ -63,8 +63,12 @@ module.exports = {
     return user;
   },
   updateUser: async (_id, data) => {
-    if (data?._id) delete data._id;
-    if (data?.username) delete data.username;
+    if (data?._id) {
+      delete data._id;
+    }
+    if (data?.username) {
+      delete data.username;
+    }
 
     await db
       .get()
@@ -310,11 +314,10 @@ module.exports = {
             },
           ])
           .toArray();
-          return shuffledPosts[0].combinedArray;
-      }else{
+        return shuffledPosts[0].combinedArray;
+      } else {
         return;
       }
-
     } catch (e) {
       console.log(e);
       return [];
