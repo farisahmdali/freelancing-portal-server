@@ -621,11 +621,29 @@ module.exports = {
       .aggregate([
         { $unwind: "$posts" },
         { $match: { "posts._id": { $in: postId } } },
+        {
+          $group: {
+            _id: 0,
+            combinedArray: {
+              $push: {
+                _id: "$posts._id",
+                head: "$posts.head",
+                description: "$posts.description",
+                links: "$posts.links",
+                pic: "$posts.pic",
+                type: "$posts.type",
+                price: "$posts.price",
+                userId: "$_id",
+                requests: "$posts.requests",
+              },
+            },
+          },
+        },
       ])
       .toArray();
 
-    console.log(value);
-    return value;
+    console.log(value[0].combinedArray);
+    return value[0].combinedArray;
   },
   addCredit: async (_id, amount) => {
     let credit = await db
@@ -771,12 +789,29 @@ module.exports = {
     console.log(value);
     return value[0]?.posts?.paid || false;
   },
-  reportHelpers: (userId, msg) => {
+  reportHelpers: async (userId, msg, id) => {
+    let user = await db
+      .get()
+      .collection("users")
+      .findOne({ _id: ObjectId(id) });
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth(); // 0-based index (0 = January, 11 = December)
+    const day = currentDate.getDate();
+    const hours = currentDate.getHours();
+    const minutes = currentDate.getMinutes();
+    const seconds = currentDate.getSeconds();
+
+    // Format the components as needed
+    const formattedDate = `${year}-${month + 1}-${day}`;
+    const formattedTime = `${hours}:${minutes}:${seconds}`;
+    console.log("Current Date:", formattedDate);
+    console.log("Current Time:", formattedTime);
     db.get()
       .collection("reports")
       .updateOne(
         { _id: ObjectId(userId) },
-        { $push: { reports: msg } },
+        { $push: { reports:{ msg, user: user.username,time:`Date:-${formattedDate}/Time:-${formattedTime}`} } },
         { upsert: true }
       )
       .then((res) => console.log(res));

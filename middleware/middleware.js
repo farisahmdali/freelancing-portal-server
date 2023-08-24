@@ -1,6 +1,6 @@
 const multer = require("multer");
 const jwt = require("jsonwebtoken");
-const { getAdmin, getAdminbyId } = require("../helpers/helper");
+const { getAdminbyId } = require("../helpers/helper");
 const { OAuth2Client } = require('google-auth-library');
 
 module.exports = {
@@ -31,7 +31,7 @@ module.exports = {
   verifyJwt: async (req, res, next) => {
     try{
 
-      let user = jwt.verify(req.body.token, process.env.SECRET_CODE);
+      let user = jwt.verify(req.headers.authorization, process.env.SECRET_CODE);
       delete req.body.token;
       req._id = user._id;
       next();
@@ -42,7 +42,7 @@ module.exports = {
   verifyJwtParams: async (req, res, next) => {
     try{
 
-      let user = jwt.verify(req.params.token, process.env.SECRET_CODE);
+      let user = jwt.verify(req.headers.authorization, process.env.SECRET_CODE);
       delete req.body.token;
       req._id = user._id;
       next();
@@ -75,7 +75,7 @@ module.exports = {
   },
   verifyJwtget: async (req, res, next) => {
     try {
-      let user = jwt.verify(req.query.token, process.env.SECRET_CODE);
+      let user = jwt.verify(req.headers.authorization, process.env.SECRET_CODE);
       delete req.query.token;
       req._id = user._id;
       next();
@@ -97,10 +97,8 @@ module.exports = {
   },
   verifyJwtAdmin:(req,res,next)=>{
     let user
-    if(req.query.token){
-         user = jwt.verify(req.query.token, process.env.SECRET_CODE);
-    }else if(req.body.token){
-        user = jwt.verify(req.body.token, process.env.SECRET_CODE);
+    if(req.headers.authorization){
+         user = jwt.verify(req.headers.authorization, process.env.SECRET_CODE);
     }else{
         res.sendStatus(403);
     }

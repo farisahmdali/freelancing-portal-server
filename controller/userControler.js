@@ -67,9 +67,10 @@ module.exports = {
     try {
       let result;
 
-      if (token) {
+      console.log(req.headers)
+      if (req.headers.authorization) {
         try {
-          let user = jwt.verify(req.body.token, process.env.SECRET_CODE);
+          let user = jwt.verify(req.headers.authorization, process.env.SECRET_CODE);
           result = await checkEmailjwt(user._id);
           if (result && !result?.blocked) {
             res.send({ userDetail: result });
@@ -376,7 +377,7 @@ module.exports = {
     }
   },
   report: async (req, res) => {
-    reportHelpers(req.body.userId, req.body.msg);
+    reportHelpers(req.body.userId, req.body.msg,req._id);
   },
   sendOtpGmail: (req, res) => {
     let otp = Math.floor(Math.random() * 5000);
